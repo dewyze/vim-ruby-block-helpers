@@ -4,8 +4,8 @@ endif
 let g:loaded_ruby_block_misc = 1
 
 let s:comment_escape = '\v^[^#]*'
-let s:block_openers = '\zs(<def>|<if>|<do>|<module>|<class>)'
-let s:end_pattern = s:comment_escape . '\send'
+let s:block_openers = '\zs\<\%(def\|if\|do\|module\|class\)\>'
+let s:end_pattern = '\%(^\|[^.:@$]\)\@<=\<end:\@!\>'
 let s:test_matchers = '^\s\+it \|^\s\+ context \|^\s\+ describe '
 let s:next_block_matchers = '^\s\+def \|^\s\+if \|^\s\+module \|^\s\+class \| do$\| do |.*|$'
 let s:start_pattern =  s:block_openers
@@ -13,18 +13,21 @@ let s:skip_pattern = 'getline(".") =~ "\\v\\S\\s<(if|unless)>\\s\\S"'
 
 command! NextBlock :call NextBlock()
 command! BlockEnd :call BlockEnd()
+command! GoToEndIfBlock :call _GoToDoIfBlock()
 command! ParentBlock :call ParentBlock()
 command! BlockHierarchy :call BlockHierarchy()
 command! BlockEnvironment :call BlockEnvironment()
 
 function! BlockEnd()
-  let s:flags = "W"
+  call _GoToDoIfBlock()
+  " let s:flags = "W"
   let cur_line = getline('.')
   call searchpair(s:start_pattern,'',s:end_pattern, s:flags, s:skip_pattern)
   " call searchpair(s:start_pattern,'',s:end_pattern, s:flags, s:skip_pattern)
 endfunction
 
 function! NextBlock()
+  call _GoToDoIfBlock()
   let s:flags = "W"
   " let cur_line = getline('.')
   " let it_line = match(cur_line, s:test_matchers)
@@ -43,8 +46,13 @@ function! NextBlock()
 " if on end, then what?
 endfunction
 
+function! _GoToDoIfBlock()
+  call search('\zs\<do\>\%( |.\+|\)\=$','',line('.'))
+endfunction
+
 noremap ]b :NextBlock<CR>
 noremap ]e :BlockEnd<CR>
+noremap ]g :GoToEndIfBlock<CR>
 
 function! PreviousBlock()
 endfunction
