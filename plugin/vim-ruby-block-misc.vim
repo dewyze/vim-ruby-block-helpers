@@ -3,100 +3,72 @@ if exists("g:loaded_ruby_block_misc")
 endif
 let g:loaded_ruby_block_misc = 1
 
-" let s:start_pattern = '\C\%(^\|[^.:@$]\)\@<=\<do:\@!\>'
+" From vim ruby - https://github.com/vim-ruby/vim-ruby/blob/074200ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L81-L85
 let s:start_pattern =
       \ '\C\%(^\s*\|[=,*/%+\-|;{]\|<<\|>>\|:\s\)\s*\zs' .
       \ '\<\%(module\|class\|if\|for\|while\|until\|case\|unless\|begin' .
       \ '\|\%(public\|protected\|private\)\=\s*def\):\@!\>' .
       \ '\|\%(^\|[^.:@$]\)\@<=\<do:\@!\>'
 
+" From vim-ruby - https://github.com/vim-ruby/vim-ruby/blob/074200ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L91
 let s:end_pattern = '\%(^\|[^.:@$]\)\@<=\<end:\@!\>'
 let s:test_matchers =
       \ '\C\%(^\s*\|[=,*/%+\-|;{]\|<<\|>>\|:\s\)\s*\zs' .
       \ '\<\%(describe\|context\|it\|shared_examples\|shared_contexts\):\@!\>'
 
-
 command! NextBlock :call NextBlock()
 command! BlockEnd :call BlockEnd()
-command! GoToEndIfBlock :call _GoToDoIfBlock()
 command! ParentBlock :call ParentBlock()
-" command! PreviousBlock :call PreviousBlock()
-" command! BlockHierarchy :call BlockHierarchy()
-" command! BlockEnvironment :call BlockEnvironment()
+command! PreviousBlock :call PreviousBlock()
+command! BlockHierarchy :call BlockHierarchy()
 
 noremap ]b :NextBlock<CR>
+noremap ]B :PreviousBlock<CR>
 noremap ]e :BlockEnd<CR>
-noremap ]g :GoToEndIfBlock<CR>
 noremap ]p :ParentBlock<CR>
-
-" TODO:
-" - Add ability to repeat action with `.`
-" - Add ability to do count?
-" - Add ability to do inside/around
+noremap ]h :BlockHierarchy<CR>
 
 function! BlockEnd()
   let s:flags = "W"
-  call _GoToDoIfBlock()
+  call _GoToEndIfDo()
   call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
 endfunction
 
 function! NextBlock()
-  call _GoToDoIfBlock()
+  call _GoToEndIfDo()
   let s:flags = "W"
   call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
   call search(s:test_matchers, s:flags)
 endfunction
 
 function! ParentBlock()
-  call _GoToDoIfBlock()
-  let s:flags = "W"
+  let s:flags = "Wb"
+  if match(getline('.'), '\zs\<do\>\%( |.\+|\)\=$') > -1
+    normal ^^
+  else
+    call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
+  endif
   call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
-  let indentation = matchend(getline('.'), '\s*')
-  echo indentation
+  normal ^^
 endfunction
 
-function! _GoToDoIfBlock()
+function! BlockHierarchy()
+  let firstline = line('.')
+  let firstcol = col('.')
+  call BlockEnd()
+  normal ^%
+  let curline = line('.')
+  let hierarchy = getline('.')
+  call ParentBlock()
+  while line('.') != curline
+    let hierarchy = getline('.') . "\n" . hierarchy
+    let curline = line('.')
+    call ParentBlock()
+  endwhile
+  call cursor(firstline, firstcol)
+  echo hierarchy
+endfunction
+
+function! _GoToEndIfDo()
   call search('\zs\<do\>\%( |.\+|\)\=$','',line('.'))
 endfunction
-
-
-" function! PreviousBlock()
-" endfunction
-
-" function! BlockHierarchy()
-" endfunction
-"
-" function! BlockEnvironment()
-" endfunction
-
-" function! s:select_a()
-"   let s:flags = 'W'
-"
-"   call searchpair(s:start_pattern,'',s:end_pattern, s:flags, s:skip_pattern)
-"   let end_pos = getpos('.')
-"
-"   " Jump to match
-"   normal %
-"   let start_pos = getpos('.')
-"
-"   return ['V', start_pos, end_pos]
-" endfunction
-"
-" function! s:select_i()
-"   let s:flags = 'W'
-"   if expand('<cword>') == 'end'
-"     let s:flags = 'cW'
-"   endif
-"
-"   call searchpair(s:start_pattern,'',s:end_pattern, s:flags, s:skip_pattern)
-"
-"   " Move up one line, and save position
-"   normal k^
-"   let end_pos = getpos('.')
-"
-"   " Move down again, jump to match, then down one line and save position
-"   normal j^%j
-"   let start_pos = getpos('.')
-"
-"   return ['V', start_pos, end_pos]
-" endfunction
