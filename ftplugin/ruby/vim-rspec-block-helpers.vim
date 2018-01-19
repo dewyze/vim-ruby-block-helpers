@@ -41,6 +41,13 @@ function! NextBlock()
   call search(s:test_matchers, s:flags)
 endfunction
 
+function! PreviousBlock()
+  let s:flags = "Wb"
+  call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
+  normal ^^
+  call search(s:test_matchers, s:flags)
+endfunction
+
 function! ParentBlock()
   let s:flags = "Wb"
   if match(getline('.'), '\zs\<do\>\%( |.\+|\)\=$') > -1
