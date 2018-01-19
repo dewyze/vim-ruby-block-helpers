@@ -1,7 +1,7 @@
-if exists("g:loaded_ruby_block_misc")
+if exists("g:rspec_block_helpers")
   finish
 endif
-let g:loaded_ruby_block_misc = 1
+let g:rspec_block_helpers = 1
 
 " From vim ruby - https://github.com/vim-ruby/vim-ruby/blob/074200ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L81-L85
 let s:start_pattern =
@@ -23,7 +23,7 @@ command! PreviousBlock :call PreviousBlock()
 command! BlockHierarchy :call BlockHierarchy()
 
 noremap ]b :NextBlock<CR>
-noremap ]B :PreviousBlock<CR>
+noremap [b :PreviousBlock<CR>
 noremap ]e :BlockEnd<CR>
 noremap ]p :ParentBlock<CR>
 noremap ]h :BlockHierarchy<CR>
