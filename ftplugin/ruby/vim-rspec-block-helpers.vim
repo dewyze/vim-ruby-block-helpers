@@ -4,17 +4,28 @@ endif
 let g:rspec_block_helpers = 1
 
 " From vim ruby - https://github.com/vim-ruby/vim-ruby/blob/074200ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L81-L85
+let s:beginning_prefix = '\C\%(^\s*\|[=,*/%+\-|;{]\|<<\|>>\|:\s\)\s*\zs'
 let s:start_pattern =
-      \ '\C\%(^\s*\|[=,*/%+\-|;{]\|<<\|>>\|:\s\)\s*\zs' .
+      \ s:beginning_prefix .
       \ '\<\%(module\|class\|if\|for\|while\|until\|case\|unless\|begin' .
       \ '\|\%(public\|protected\|private\)\=\s*def\):\@!\>' .
       \ '\|\%(^\|[^.:@$]\)\@<=\<do:\@!\>'
 
 " From vim-ruby - https://github.com/vim-ruby/vim-ruby/blob/074200ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L91
 let s:end_pattern = '\%(^\|[^.:@$]\)\@<=\<end:\@!\>'
-let s:test_matchers =
-      \ '\C\%(^\s*\|[=,*/%+\-|;{]\|<<\|>>\|:\s\)\s*\zs' .
-      \ '\<\%(describe\|context\|it\|shared_examples\|shared_contexts\):\@!\>'
+
+let s:group_prefix = s:beginning_prefix . '\<\%('
+let s:suffix = '\):\@!\>'
+let s:non_test_block_keywords = 'class\|module\|def'
+let s:test_block_keywords = 'describe\|context\|it\|shared_examples\|shared_contexts'
+let s:non_test_block_pattern = s:group_prefix . s:non_test_block_keywords . s:suffix
+let s:test_block_pattern = s:group_prefix . s:test_block_keywords . s:suffix
+let s:next_block_pattern = s:group_prefix . s:test_block_keywords . '\|' . s:non_test_block_keywords . s:suffix
+let s:env_pattern =
+      \ '\C^\s*\zs' .
+      \ '\%(\<let[!]\=\>' .
+      \ '\|subject\%((:.*)\)\=\%(\s\%({\|do\)\)' .
+      \ '\|@[a-zA-Z0-9_]\+\s*=\)'
 
 command! NextBlock :call NextBlock()
 command! BlockEnd :call BlockEnd()
@@ -35,17 +46,22 @@ function! BlockEnd()
 endfunction
 
 function! NextBlock()
+  " TODO: Go to all matchers, not just do
   call _GoToEndIfDo()
   let s:flags = "W"
   call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
-  call search(s:test_matchers, s:flags)
+  call search(s:next_block_pattern, s:flags)
 endfunction
 
 function! PreviousBlock()
+  call _GoToEndIfDo()
   let s:flags = "Wb"
-  call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
-  normal ^^
-  call search(s:test_matchers, s:flags)
+  if match(getline('.'), s:next_block_pattern) == -1
+    call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
+  end
+  normal ^
+  " TODO: look for correct indentation
+  call search(s:next_block_pattern, s:flags)
 endfunction
 
 function! ParentBlock()
@@ -77,5 +93,7 @@ function! BlockHierarchy()
 endfunction
 
 function! _GoToEndIfDo()
-  call search('\zs\<do\>\%( |.\+|\)\=$','',line('.'))
+  if match(getline('.'), '\zs\<do\>\%( |.\+|\)\=$') > -1
+    normal $
+  endif
 endfunction
