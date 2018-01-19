@@ -32,12 +32,14 @@ command! BlockEnd :call BlockEnd()
 command! ParentBlock :call ParentBlock()
 command! PreviousBlock :call PreviousBlock()
 command! BlockHierarchy :call BlockHierarchy()
+command! BlockEnv :call BlockEnv()
 
 noremap ]b :NextBlock<CR>
 noremap [b :PreviousBlock<CR>
 noremap ]e :BlockEnd<CR>
 noremap ]p :ParentBlock<CR>
 noremap ]h :BlockHierarchy<CR>
+noremap ]v :BlockEnv<CR>
 
 function! BlockEnd()
   let s:flags = "W"
@@ -90,6 +92,58 @@ function! BlockHierarchy()
   endwhile
   call cursor(firstline, firstcol)
   echo hierarchy
+endfunction
+
+function! BlockEnv()
+  let s:flags = 'W'
+  let l:origline = line('.')
+  let l:origcol = col('.')
+  call BlockEnd()
+  normal ^%
+  let l:curline = line('.')
+  let l:curcol = col('.')
+  let l:env = getline('.')
+  call ParentBlock()
+  while line('.') != l:curline
+    let [l:vars, l:curline, l:curcol] = _SearchForEnv(l:curline)
+    call cursor(l:curline, l:curcol)
+    let l:env = getline('.') . "\n" . l:vars . l:env
+    call ParentBlock()
+  endwhile
+  call cursor(l:origline, l:origcol)
+  echo l:env
+endfunction
+
+function! _SearchForEnv(stopline)
+  let curline = line('.')
+  let curcol = col('.')
+  let new_stop_line = search(s:test_block_pattern, 'Wn', a:stopline)
+  let stopline = 0
+  if new_stop_line == 0
+    let stopline = a:stopline
+  else
+    let stopline = new_stop_line
+  endif
+  let l:next_outside_test_block_matcher_line = search(s:non_test_block_pattern, 'Wn', stopline)
+
+  if l:next_outside_test_block_matcher_line != 0
+    let [vars_1, _, _] = _SearchForEnv(l:next_outside_test_block_matcher_line - 1)
+    call cursor(l:next_outside_test_block_matcher_line, 1)
+    normal ^%j
+    let [vars_2, _, _] = _SearchForEnv(stopline)
+    return [vars_1 . vars_2, curline, curcol]
+  else
+    let vars = ''
+    while 1
+      let l:flags = 'W'
+      if search(s:env_pattern, l:flags, stopline) == 0
+        break
+      else
+        let vars = vars . getline('.') . "\n"
+      endif
+    endwhile
+    return [vars, curline, curcol]
+  endif
 endfunction
 
 function! _GoToEndIfDo()
