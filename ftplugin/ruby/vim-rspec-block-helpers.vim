@@ -42,39 +42,36 @@ noremap ]h :BlockHierarchy<CR>
 noremap ]v :BlockEnv<CR>
 
 function! BlockEnd()
-  let s:flags = "W"
-  call _GoToEndIfDo()
-  call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
+  let flags = "W"
+  call _GoToMatcher()
+  call searchpair(s:start_pattern,'',s:end_pattern, flags)
 endfunction
 
 function! NextBlock()
-  " TODO: Go to all matchers, not just do
-  call _GoToEndIfDo()
-  let s:flags = "W"
-  call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
-  call search(s:next_block_pattern, s:flags)
+  let flags = "W"
+  call _GoToMatcher()
+  call searchpair(s:start_pattern,'',s:end_pattern, flags)
+  call search(s:next_block_pattern, flags)
 endfunction
 
 function! PreviousBlock()
-  call _GoToEndIfDo()
-  let s:flags = "Wb"
+  let flags = "Wb"
+  call _GoToMatcher()
   if match(getline('.'), s:next_block_pattern) == -1
-    call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
+    call searchpair(s:start_pattern,'',s:end_pattern, flags)
   end
   normal ^
   " TODO: look for correct indentation
-  call search(s:next_block_pattern, s:flags)
+  call search(s:next_block_pattern, flags)
 endfunction
 
 function! ParentBlock()
-  let s:flags = "Wb"
-  if match(getline('.'), '\zs\<do\>\%( |.\+|\)\=$') > -1
-    normal ^^
-  else
-    call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
+  let flags = "Wb"
+  if _GoToMatcher() < 1
+    call searchpair(s:start_pattern,'',s:end_pattern, flags)
   endif
-  call searchpair(s:start_pattern,'',s:end_pattern, s:flags)
-  normal ^^
+  call searchpair(s:start_pattern,'',s:end_pattern, flags)
+  normal ^
 endfunction
 
 function! BlockHierarchy()
@@ -95,7 +92,6 @@ function! BlockHierarchy()
 endfunction
 
 function! BlockEnv()
-  let s:flags = 'W'
   let l:origline = line('.')
   let l:origcol = col('.')
   call BlockEnd()
@@ -146,8 +142,7 @@ function! _SearchForEnv(stopline)
   endif
 endfunction
 
-function! _GoToEndIfDo()
-  if match(getline('.'), '\zs\<do\>\%( |.\+|\)\=$') > -1
-    normal $
-  endif
+function! _GoToMatcher()
+  normal ^
+  return search(s:start_pattern, 'c', line('.'))
 endfunction
