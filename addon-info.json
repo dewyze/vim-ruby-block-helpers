@@ -1,0 +1,5 @@
+{
+  "name": "vim-ruby-block-helpers",
+  "description": "Helpers for navigating and extracting hierarchy from nested ruby blocks",
+  "author": "dewyze"
+}

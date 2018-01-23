@@ -1,0 +1,38 @@
+*vim-ruby-block-helpers.txt*	Helpers for navigating and extracting hierarchy from nested ruby blocks
+dewyze                                                *vim-ruby-block-helpers*
+
+==============================================================================
+CONTENTS                                     *vim-ruby-block-helpers-contents*
+  1. Commands................................|vim-ruby-block-helpers-commands|
+
+==============================================================================
+COMMANDS                                     *vim-ruby-block-helpers-commands*
+
+:NextBlock                                                        *:NextBlock*
+  This will go to the beginning of the line of the next block at the sibling
+  level. If run on the last block inside another block, it will go to the
+  first sibling of the parent block.
+
+:BlockEnd                                                          *:BlockEnd*
+  This will go to the end of the current block.
+
+:ParentBlock                                                    *:ParentBlock*
+  This will go to the beginning of the line of the immediate block surrounding
+  the block you are currently in.
+
+:PreviousBlock                                                *:PreviousBlock*
+  This will go to the beginning of the line of the previous block at the
+  sibling level. If run on the first block inside another block, it will go to
+  the first previous sibling of the parent block.
+
+:BlockHierarchy                                              *:BlockHierarchy*
+  This will print the hierarchy of surrounding blocks of the current line.
+
+:BlockEnv                                                          *:BlockEnv*
+  *EXPERIEMENTAL* This should really only be used in RSpec style files, and it
+  is tailored to those. It will print out the first line all `let/subject`
+  blocks, as well as anytime an `@=` varable is defined in a setup section for
+  a test.
+
+
+vim:tw=78:ts=8:ft=help:norl:

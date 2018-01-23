@@ -1,7 +1,7 @@
-if exists("g:rspec_block_helpers")
+if exists("g:ruby_block_helpers")
   finish
 endif
-let g:rspec_block_helpers = 1
+let g:ruby_block_helpers = 1
 
 " From vim ruby - https://github.com/vim-ruby/vim-ruby/blob/074200ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L81-L85
 let s:beginning_prefix = '\C\%(^\s*\|[=,*/%+\-|;{]\|<<\|>>\|:\s\)\s*\zs'
@@ -10,10 +10,8 @@ let s:start_pattern =
       \ '\<\%(module\|class\|if\|for\|while\|until\|case\|unless\|begin' .
       \ '\|\%(public\|protected\|private\)\=\s*def\):\@!\>' .
       \ '\|\%(^\|[^.:@$]\)\@<=\<do:\@!\>'
-
 " From vim-ruby - https://github.com/vim-ruby/vim-ruby/blob/074200ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L91
 let s:end_pattern = '\%(^\|[^.:@$]\)\@<=\<end:\@!\>'
-
 let s:group_prefix = s:beginning_prefix . '\<\%('
 let s:suffix = '\):\@!\>'
 let s:non_test_block_keywords = 'class\|module\|def'
@@ -27,11 +25,36 @@ let s:env_pattern =
       \ '\|subject\%((:.*)\)\=\%(\s\%({\|do\)\)' .
       \ '\|@[a-zA-Z0-9_]\+\s*=\)'
 
+""
+" This will go to the beginning of the line of the next block at the sibling
+" level. If run on the last block inside another block, it will go to the first
+" sibling of the parent block.
 command! NextBlock :call NextBlock()
+
+""
+" This will go to the end of the current block.
 command! BlockEnd :call BlockEnd()
+
+""
+" This will go to the beginning of the line of the immediate block surrounding
+" the block you are currently in.
 command! ParentBlock :call ParentBlock()
+
+""
+" This will go to the beginning of the line of the previous block at the
+" sibling level. If run on the first block inside another block, it will go to
+" the first previous sibling of the parent block.
 command! PreviousBlock :call PreviousBlock()
+
+""
+" This will print the hierarchy of surrounding blocks of the current line.
 command! BlockHierarchy :call BlockHierarchy()
+
+""
+" *EXPERIEMENTAL*
+" This should really only be used in RSpec style files, and it is tailored to
+" those. It will print out the first line all `let/subject` blocks, as well as
+" anytime an `@=` varable is defined in a setup section for a test.
 command! BlockEnv :call BlockEnv()
 
 noremap ]b :NextBlock<CR>
