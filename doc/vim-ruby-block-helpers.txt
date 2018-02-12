@@ -4,6 +4,7 @@ dewyze                                                *vim-ruby-block-helpers*
 ==============================================================================
 CONTENTS                                     *vim-ruby-block-helpers-contents*
   1. Commands................................|vim-ruby-block-helpers-commands|
+  2. Mappings................................|vim-ruby-block-helpers-mappings|
 
 ==============================================================================
 COMMANDS                                     *vim-ruby-block-helpers-commands*
@@ -33,6 +34,16 @@ COMMANDS                                     *vim-ruby-block-helpers-commands*
   is tailored to those. It will print out the first line all `let/subject`
   blocks, as well as anytime an `@=` varable is defined in a setup section for
   a test.
+
+==============================================================================
+MAPPINGS                                     *vim-ruby-block-helpers-mappings*
+
+]b                Goes to next sibling block, or next sibling of parent block
+[b        Goes to previous sibling block, or previous sibling of parent block
+]e                                               Goes to end of current block
+]p                            Goes to the beginning of the first parent block
+]h                               Print the block hierachy to the current line
+]v                  Prints the various 'lets', 'subjects', and '@=' variables
 
 
 vim:tw=78:ts=8:ft=help:norl:

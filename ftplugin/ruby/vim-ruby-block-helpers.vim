@@ -15,9 +15,11 @@ let s:end_pattern = '\%(^\|[^.:@$]\)\@<=\<end:\@!\>'
 let s:group_prefix = s:beginning_prefix . '\<\%('
 let s:suffix = '\):\@!\>'
 let s:non_test_block_keywords = 'class\|module\|def'
-let s:test_block_keywords = 'describe\|context\|it\|shared_examples\|shared_contexts'
+let s:context_block_keywords = 'describe\|context\|shared_examples\|shared_context'
+let s:test_block_keywords = s:context_block_keywords . '\|it'
 let s:non_test_block_pattern = s:group_prefix . s:non_test_block_keywords . s:suffix
 let s:test_block_pattern = s:group_prefix . s:test_block_keywords . s:suffix
+let s:context_block_pattern = s:group_prefix . s:context_block_keywords . s:suffix . '\s.*\zs\<do\>'
 let s:next_block_pattern = s:group_prefix . s:test_block_keywords . '\|' . s:non_test_block_keywords . s:suffix
 let s:env_pattern =
       \ '\C^\s*\zs' .
@@ -25,59 +27,79 @@ let s:env_pattern =
       \ '\|subject\%((:.*)\)\=\%(\s\%({\|do\)\)' .
       \ '\|@[a-zA-Z0-9_]\+\s*=\)'
 
+" TODO
+" Set marks
+" Return to column/line when appropriate
+
 ""
 " This will go to the beginning of the line of the next block at the sibling
 " level. If run on the last block inside another block, it will go to the first
 " sibling of the parent block.
-command! NextBlock :call NextBlock()
+command! RubyBlockNext :call RubyBlockNext()
 
 ""
 " This will go to the end of the current block.
-command! BlockEnd :call BlockEnd()
+command! RubyBlockEnd :call RubyBlockEnd()
 
 ""
 " This will go to the beginning of the line of the immediate block surrounding
 " the block you are currently in.
-command! ParentBlock :call ParentBlock()
+command! RubyBlockParent :call RubyBlockParent()
+
+""
+" This will go to the beginning of the line of the immediate rspec block
+" surrounding the block you are currently in. Limited to
+" describe/context/shared_example.
+command! RubyBlockNearestSpecContext :call RubyBlockNearestSpecContext()
 
 ""
 " This will go to the beginning of the line of the previous block at the
 " sibling level. If run on the first block inside another block, it will go to
 " the first previous sibling of the parent block.
-command! PreviousBlock :call PreviousBlock()
+command! RubyBlockPrevious :call RubyBlockPrevious()
 
 ""
 " This will print the hierarchy of surrounding blocks of the current line.
-command! BlockHierarchy :call BlockHierarchy()
+command! RubyBlockHierarchy :call RubyBlockHierarchy()
 
 ""
-" *EXPERIEMENTAL*
+" *EXPERIMENTAL*
 " This should really only be used in RSpec style files, and it is tailored to
 " those. It will print out the first line all `let/subject` blocks, as well as
 " anytime an `@=` varable is defined in a setup section for a test.
-command! BlockEnv :call BlockEnv()
+command! RubyBlockSpecEnv :call RubyBlockSpecEnv()
 
-noremap ]b :NextBlock<CR>
-noremap [b :PreviousBlock<CR>
-noremap ]e :BlockEnd<CR>
-noremap ]p :ParentBlock<CR>
-noremap ]h :BlockHierarchy<CR>
-noremap ]v :BlockEnv<CR>
+""
+" @section Mappings, mappings
+" ]b                Goes to next sibling block, or next sibling of parent block
+" [b        Goes to previous sibling block, or previous sibling of parent block
+" ]e                                               Goes to end of current block
+" ]p                            Goes to the beginning of the first parent block
+" ]h                               Print the block hierachy to the current line
+" ]v                  Prints the various 'lets', 'subjects', and '@=' variables
 
-function! BlockEnd()
+noremap <silent> ]b :RubyBlockNext<CR>
+noremap <silent> [b :RubyBlockPrevious<CR>
+noremap <silent> ]e :RubyBlockEnd<CR>
+noremap <silent> ]p :RubyBlockParent<CR>
+noremap <silent> ]s :RubyBlockNearestSpecContext<CR>
+noremap <silent> ]h :RubyBlockHierarchy<CR>
+noremap <silent> ]v :RubyBlockSpecEnv<CR>
+
+function! RubyBlockEnd()
   let flags = "W"
   call _GoToMatcher()
   call searchpair(s:start_pattern,'',s:end_pattern, flags)
 endfunction
 
-function! NextBlock()
+function! RubyNextBlock()
   let flags = "W"
   call _GoToMatcher()
   call searchpair(s:start_pattern,'',s:end_pattern, flags)
   call search(s:next_block_pattern, flags)
 endfunction
 
-function! PreviousBlock()
+function! RubyBlockPrevious()
   let flags = "Wb"
   call _GoToMatcher()
   if match(getline('.'), s:next_block_pattern) == -1
@@ -88,7 +110,7 @@ function! PreviousBlock()
   call search(s:next_block_pattern, flags)
 endfunction
 
-function! ParentBlock()
+function! RubyBlockParent()
   let flags = "Wb"
   if _GoToMatcher() < 1
     call searchpair(s:start_pattern,'',s:end_pattern, flags)
@@ -97,37 +119,52 @@ function! ParentBlock()
   normal ^
 endfunction
 
-function! BlockHierarchy()
+function! RubyBlockNearestSpecContext()
+  let flags = "Wb"
+  if getline('.') !~ s:context_block_pattern
+    let prev_line = line('.')
+    while line('.') != 1
+      call searchpair(s:start_pattern, '', s:end_pattern, flags)
+      if getline('.') =~ s:context_block_pattern || line('.') == prev_line
+        break
+      endif
+      let prev_line = line('.')
+    endwhile
+  endif
+  normal ^
+endfunction
+
+function! RubyBlockHierarchy()
   let firstline = line('.')
   let firstcol = col('.')
-  call BlockEnd()
+  call RubyBlockEnd()
   normal ^%
   let curline = line('.')
   let hierarchy = getline('.')
-  call ParentBlock()
+  call RubyBlockParent()
   while line('.') != curline
     let hierarchy = getline('.') . "\n" . hierarchy
     let curline = line('.')
-    call ParentBlock()
+    call RubyBlockParent()
   endwhile
   call cursor(firstline, firstcol)
   echo hierarchy
 endfunction
 
-function! BlockEnv()
+function! RubyBlockSpecEnv()
   let l:origline = line('.')
   let l:origcol = col('.')
-  call BlockEnd()
+  call RubyBlockEnd()
   normal ^%
   let l:curline = line('.')
   let l:curcol = col('.')
   let l:env = getline('.')
-  call ParentBlock()
+  call RubyBlockParent()
   while line('.') != l:curline
     let [l:vars, l:curline, l:curcol] = _SearchForEnv(l:curline)
     call cursor(l:curline, l:curcol)
     let l:env = getline('.') . "\n" . l:vars . l:env
-    call ParentBlock()
+    call RubyBlockParent()
   endwhile
   call cursor(l:origline, l:origcol)
   echo l:env
