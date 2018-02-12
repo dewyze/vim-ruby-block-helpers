@@ -10,7 +10,7 @@ let s:start_pattern =
       \ '\<\%(module\|class\|if\|for\|while\|until\|case\|unless\|begin' .
       \ '\|\%(public\|protected\|private\)\=\s*def\):\@!\>' .
       \ '\|\%(^\|[^.:@$]\)\@<=\<do:\@!\>'
-" From vim-ruby - https://github.com/vim-ruby/vim-ruby/blob/074200ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L91
+" From vim-ruby - https://github.com/vim-ruby/vim-ruby/blob/074202ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L91
 let s:end_pattern = '\%(^\|[^.:@$]\)\@<=\<end:\@!\>'
 let s:group_prefix = s:beginning_prefix . '\<\%('
 let s:suffix = '\):\@!\>'
@@ -30,6 +30,7 @@ let s:env_pattern =
 " TODO
 " Set marks
 " Return to column/line when appropriate
+" Make visual work
 
 ""
 " This will go to the beginning of the line of the next block at the sibling
@@ -40,6 +41,10 @@ command! RubyBlockNext :call RubyBlockNext()
 ""
 " This will go to the end of the current block.
 command! RubyBlockEnd :call RubyBlockEnd()
+
+""
+" This will go to the start of the current block.
+command! RubyBlockStart :call RubyBlockStart()
 
 ""
 " This will go to the beginning of the line of the immediate block surrounding
@@ -60,48 +65,66 @@ command! RubyBlockPrevious :call RubyBlockPrevious()
 
 ""
 " This will print the hierarchy of surrounding blocks of the current line.
-command! RubyBlockHierarchy :call RubyBlockHierarchy()
+" For example, it will print:
+"
+" describe "foo" do
+"   context "bar" do
+"     it "baz" do
+command! RubyBlockHierarchy :call Output(function("BuildHierarchy"))
 
 ""
 " *EXPERIMENTAL*
 " This should really only be used in RSpec style files, and it is tailored to
 " those. It will print out the first line all `let/subject` blocks, as well as
 " anytime an `@=` varable is defined in a setup section for a test.
-command! RubyBlockSpecEnv :call RubyBlockSpecEnv()
+" For example, it will print:
+"
+" describe "foo" do
+"   let(:thing1) { "thing 1" }
+"   context "bar" do
+"     \@thing2 = Thing2.new
+"     it "baz" do
+command! RubyBlockSpecEnv :call Output(function("BuildEnv"))
 
 ""
 " @section Mappings, mappings
 " ]b                Goes to next sibling block, or next sibling of parent block
 " [b        Goes to previous sibling block, or previous sibling of parent block
 " ]e                                               Goes to end of current block
+" ]s                                             Goes to start of current block
 " ]p                            Goes to the beginning of the first parent block
+" ]c     Go to the beginning of the first spec context block (describe/context)
 " ]h                               Print the block hierachy to the current line
 " ]v                  Prints the various 'lets', 'subjects', and '@=' variables
 
 noremap <silent> ]b :RubyBlockNext<CR>
 noremap <silent> [b :RubyBlockPrevious<CR>
 noremap <silent> ]e :RubyBlockEnd<CR>
+noremap <silent> ]s :RubyBlockStart<CR>
 noremap <silent> ]p :RubyBlockParent<CR>
-noremap <silent> ]s :RubyBlockNearestSpecContext<CR>
+noremap <silent> ]c :RubyBlockNearestSpecContext<CR>
 noremap <silent> ]h :RubyBlockHierarchy<CR>
 noremap <silent> ]v :RubyBlockSpecEnv<CR>
 
 function! RubyBlockEnd()
   let flags = "W"
-  call _GoToMatcher()
+  call GoToMatcher()
   call searchpair(s:start_pattern,'',s:end_pattern, flags)
 endfunction
 
-function! RubyNextBlock()
-  let flags = "W"
-  call _GoToMatcher()
-  call searchpair(s:start_pattern,'',s:end_pattern, flags)
+function! RubyBlockStart()
+  call RubyBlockEnd()
+  normal %
+endfunction
+
+function! RubyBlockNext()
+  call RubyBlockEnd()
   call search(s:next_block_pattern, flags)
 endfunction
 
 function! RubyBlockPrevious()
   let flags = "Wb"
-  call _GoToMatcher()
+  call GoToMatcher()
   if match(getline('.'), s:next_block_pattern) == -1
     call searchpair(s:start_pattern,'',s:end_pattern, flags)
   end
@@ -112,7 +135,7 @@ endfunction
 
 function! RubyBlockParent()
   let flags = "Wb"
-  if _GoToMatcher() < 1
+  if GoToMatcher() < 1
     call searchpair(s:start_pattern,'',s:end_pattern, flags)
   endif
   call searchpair(s:start_pattern,'',s:end_pattern, flags)
@@ -134,45 +157,46 @@ function! RubyBlockNearestSpecContext()
   normal ^
 endfunction
 
-function! RubyBlockHierarchy()
-  let firstline = line('.')
-  let firstcol = col('.')
+function! Output(Func)
+  let origline = line('.')
+  let origcol = col('.')
   call RubyBlockEnd()
   normal ^%
   let curline = line('.')
-  let hierarchy = getline('.')
+  let l:output = getline('.')
   call RubyBlockParent()
-  while line('.') != curline
-    let hierarchy = getline('.') . "\n" . hierarchy
-    let curline = line('.')
-    call RubyBlockParent()
-  endwhile
-  call cursor(firstline, firstcol)
-  echo hierarchy
+  let l:output = a:Func(curline, output)
+  call cursor(origline, origcol)
+  echo l:output
 endfunction
 
-function! RubyBlockSpecEnv()
-  let l:origline = line('.')
-  let l:origcol = col('.')
-  call RubyBlockEnd()
-  normal ^%
-  let l:curline = line('.')
-  let l:curcol = col('.')
-  let l:env = getline('.')
-  call RubyBlockParent()
+function! BuildHierarchy(curline, output)
+  let l:output = a:output
+  let l:curline = a:curline
   while line('.') != l:curline
-    let [l:vars, l:curline, l:curcol] = _SearchForEnv(l:curline)
-    call cursor(l:curline, l:curcol)
-    let l:env = getline('.') . "\n" . l:vars . l:env
+    let l:output = getline('.') . "\n" . l:output
+    let l:curline = line('.')
     call RubyBlockParent()
   endwhile
-  call cursor(l:origline, l:origcol)
-  echo l:env
+
+  return l:output
 endfunction
 
-function! _SearchForEnv(stopline)
+function! BuildEnv(curline, output)
+  let l:output = a:output
+  let l:curline = a:curline
+  while line('.') != l:curline
+    let [l:vars, l:curline] = SearchForEnv(l:curline)
+    call cursor(l:curline, 1)
+    let l:output = getline('.') . "\n" . l:vars . l:output
+    call RubyBlockParent()
+  endwhile
+
+  return l:output
+endfunction
+
+function! SearchForEnv(stopline)
   let curline = line('.')
-  let curcol = col('.')
   let new_stop_line = search(s:test_block_pattern, 'Wn', a:stopline)
   let stopline = 0
   if new_stop_line == 0
@@ -183,11 +207,11 @@ function! _SearchForEnv(stopline)
   let l:next_outside_test_block_matcher_line = search(s:non_test_block_pattern, 'Wn', stopline)
 
   if l:next_outside_test_block_matcher_line != 0
-    let [vars_1, _, _] = _SearchForEnv(l:next_outside_test_block_matcher_line - 1)
+    let [vars_1, _] = SearchForEnv(l:next_outside_test_block_matcher_line - 1)
     call cursor(l:next_outside_test_block_matcher_line, 1)
     normal ^%j
-    let [vars_2, _, _] = _SearchForEnv(stopline)
-    return [vars_1 . vars_2, curline, curcol]
+    let [vars_2, _] = SearchForEnv(stopline)
+    return [vars_1 . vars_2, curline]
   else
     let vars = ''
     while 1
@@ -198,11 +222,11 @@ function! _SearchForEnv(stopline)
         let vars = vars . getline('.') . "\n"
       endif
     endwhile
-    return [vars, curline, curcol]
+    return [vars, curline]
   endif
 endfunction
 
-function! _GoToMatcher()
+function! GoToMatcher()
   normal ^
   return search(s:start_pattern, 'c', line('.'))
 endfunction

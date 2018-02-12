@@ -9,31 +9,45 @@ CONTENTS                                     *vim-ruby-block-helpers-contents*
 ==============================================================================
 COMMANDS                                     *vim-ruby-block-helpers-commands*
 
-:NextBlock                                                        *:NextBlock*
+:RubyBlockNext                                                *:RubyBlockNext*
   This will go to the beginning of the line of the next block at the sibling
   level. If run on the last block inside another block, it will go to the
   first sibling of the parent block.
 
-:BlockEnd                                                          *:BlockEnd*
+:RubyBlockEnd                                                  *:RubyBlockEnd*
   This will go to the end of the current block.
 
-:ParentBlock                                                    *:ParentBlock*
+:RubyBlockStart                                              *:RubyBlockStart*
+  This will go to the start of the current block.
+
+:RubyBlockParent                                            *:RubyBlockParent*
   This will go to the beginning of the line of the immediate block surrounding
   the block you are currently in.
 
-:PreviousBlock                                                *:PreviousBlock*
+:RubyBlockNearestSpecContext                    *:RubyBlockNearestSpecContext*
+  This will go to the beginning of the line of the immediate rspec block
+  surrounding the block you are currently in. Limited to
+  describe/context/shared_example.
+
+:RubyBlockPrevious                                        *:RubyBlockPrevious*
   This will go to the beginning of the line of the previous block at the
   sibling level. If run on the first block inside another block, it will go to
   the first previous sibling of the parent block.
 
-:BlockHierarchy                                              *:BlockHierarchy*
-  This will print the hierarchy of surrounding blocks of the current line.
+:RubyBlockHierarchy                                      *:RubyBlockHierarchy*
+  This will print the hierarchy of surrounding blocks of the current line. For
+  example, it will print:
 
-:BlockEnv                                                          *:BlockEnv*
-  *EXPERIEMENTAL* This should really only be used in RSpec style files, and it
+  describe "foo" do   context "bar" do     it "baz" do
+
+:RubyBlockSpecEnv                                          *:RubyBlockSpecEnv*
+  *EXPERIMENTAL* This should really only be used in RSpec style files, and it
   is tailored to those. It will print out the first line all `let/subject`
   blocks, as well as anytime an `@=` varable is defined in a setup section for
-  a test.
+  a test. For example, it will print:
+
+  describe "foo" do   let(:thing1) { "thing 1" }   context "bar" do
+  \@thing2 = Thing2.new     it "baz" do
 
 ==============================================================================
 MAPPINGS                                     *vim-ruby-block-helpers-mappings*
@@ -41,7 +55,9 @@ MAPPINGS                                     *vim-ruby-block-helpers-mappings*
 ]b                Goes to next sibling block, or next sibling of parent block
 [b        Goes to previous sibling block, or previous sibling of parent block
 ]e                                               Goes to end of current block
+]s                                             Goes to start of current block
 ]p                            Goes to the beginning of the first parent block
+]c     Go to the beginning of the first spec context block (describe/context)
 ]h                               Print the block hierachy to the current line
 ]v                  Prints the various 'lets', 'subjects', and '@=' variables
 
