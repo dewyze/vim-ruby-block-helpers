@@ -4,14 +4,16 @@ endif
 let g:ruby_block_helpers = 1
 
 " From vim ruby - https://github.com/vim-ruby/vim-ruby/blob/074200ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L81-L85
-let s:beginning_prefix = '\C\%(^\s*\|[=,*/%+\-|;{]\|<<\|>>\|:\s\)\s*\zs'
+let s:beginning_prefix = '\%(^\s*\|[=,*/%+\-|;{]\|<<\|>>\|:\s\)\s*\zs'
 let s:start_pattern =
       \ s:beginning_prefix .
       \ '\<\%(module\|class\|if\|for\|while\|until\|case\|unless\|begin' .
       \ '\|\%(public\|protected\|private\)\=\s*def\):\@!\>' .
       \ '\|\%(^\|[^.:@$]\)\@<=\<do:\@!\>'
+
 " From vim-ruby - https://github.com/vim-ruby/vim-ruby/blob/074202ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L91
 let s:end_pattern = '\%(^\|[^.:@$]\)\@<=\<end:\@!\>'
+let s:ruby_block_keywords = '\%(' . s:start_pattern . '\|' . s:end_pattern . '\)'
 let s:group_prefix = s:beginning_prefix . '\<\%('
 let s:suffix = '\):\@!\>'
 let s:non_test_block_keywords = 'class\|module\|def'
@@ -31,6 +33,7 @@ let s:env_pattern =
 " Set marks
 " Return to column/line when appropriate
 " Make visual work
+" handle do in test description
 
 ""
 " This will go to the beginning of the line of the next block at the sibling
@@ -118,6 +121,7 @@ function! RubyBlockStart()
 endfunction
 
 function! RubyBlockNext()
+  let flags = "W"
   call RubyBlockEnd()
   call search(s:next_block_pattern, flags)
 endfunction
@@ -129,8 +133,11 @@ function! RubyBlockPrevious()
     call searchpair(s:start_pattern,'',s:end_pattern, flags)
   end
   normal ^
-  " TODO: look for correct indentation
-  call search(s:next_block_pattern, flags)
+  call search(s:ruby_block_keywords, flags)
+  if match(getline('.'), s:end_pattern) != -1
+    normal %
+  endif
+  normal ^
 endfunction
 
 function! RubyBlockParent()
