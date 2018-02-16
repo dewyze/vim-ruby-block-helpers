@@ -74,7 +74,7 @@ For example, it will print:
 describe "foo" do
   let(:thing1) { "thing 1" }
   context "bar" do
-    \@thing2 = Thing2.new
+    @thing2 = Thing2.new
     it "baz" do
 ```
 
