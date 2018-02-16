@@ -3,6 +3,17 @@ if exists("g:ruby_block_helpers")
 endif
 let g:ruby_block_helpers = 1
 
+""
+" @section Introduction, intro
+" This plugin is intended to help with easier movement between ruby blocks as
+" well as aiding in working in various rspec files. It provides keybinding for
+" moving to parent and sibling blocs, and printing out information about block
+" nesting in a spec file.
+"
+" Feel free to contribute or improve this by following the contributing
+" guidelines at
+" https://github.com/dewyze/vim-ruby-block-helpers/CONTRIBUTING.md
+
 " From vim ruby - https://github.com/vim-ruby/vim-ruby/blob/074200ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L81-L85
 let s:beginning_prefix = '\%(^\s*\|[=,*/%+\-|;{]\|<<\|>>\|:\s\)\s*\zs'
 let s:start_pattern =
@@ -67,8 +78,9 @@ command! RubyBlockEnd :call RubyBlockEnd()
 command! -range VRubyBlockEnd :call RubyBlockEnd(visualmode())
 
 ""
-" This will print the hierarchy of surrounding blocks of the current line.
-" For example, it will print:
+" This will print the hierarchy of surrounding parent blocks of the current
+" line. This can be useful in large spec files to learn where you are. For 
+" example, it will print:
 "
 " describe "foo" do
 "   context "bar" do

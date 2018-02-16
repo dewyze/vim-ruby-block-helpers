@@ -3,8 +3,20 @@ dewyze                                                *vim-ruby-block-helpers*
 
 ==============================================================================
 CONTENTS                                     *vim-ruby-block-helpers-contents*
-  1. Commands................................|vim-ruby-block-helpers-commands|
-  2. Mappings................................|vim-ruby-block-helpers-mappings|
+  1. Introduction...............................|vim-ruby-block-helpers-intro|
+  2. Commands................................|vim-ruby-block-helpers-commands|
+  3. Mappings................................|vim-ruby-block-helpers-mappings|
+
+==============================================================================
+INTRODUCTION                                    *vim-ruby-block-helpers-intro*
+
+This plugin is intended to help with easier movement between ruby blocks as
+well as aiding in working in various rspec files. It provides keybinding for
+moving to parent and sibling blocs, and printing out information about block
+nesting in a spec file.
+
+Feel free to contribute or improve this by following the contributing
+guidelines at https://github.com/dewyze/vim-ruby-block-helpers/CONTRIBUTING.md
 
 ==============================================================================
 COMMANDS                                     *vim-ruby-block-helpers-commands*
@@ -35,7 +47,8 @@ COMMANDS                                     *vim-ruby-block-helpers-commands*
   This will go to the end of the current block.
 
 :RubyBlockHierarchy                                      *:RubyBlockHierarchy*
-  This will print the hierarchy of surrounding blocks of the current line. For
+  This will print the hierarchy of surrounding parent blocks of the current
+  line. This can be useful in large spec files to learn where you are. For
   example, it will print:
 
   describe "foo" do   context "bar" do     it "baz" do
