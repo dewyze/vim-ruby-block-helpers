@@ -40,14 +40,11 @@ command! RubyBlockNext :call RubyBlockNext()
 command! -range VRubyBlockNext :call RubyBlockNext(visualmode())
 
 ""
-" This will go to the end of the current block.
-command! RubyBlockEnd :call RubyBlockEnd()
-command! -range VRubyBlockEnd :call RubyBlockEnd(visualmode())
-
-""
-" This will go to the start of the current block.
-command! RubyBlockStart :call RubyBlockStart()
-command! -range VRubyBlockStart :call RubyBlockStart(visualmode())
+" This will go to the beginning of the line of the previous block at the
+" sibling level. If run on the first block inside another block, it will go to
+" the first previous sibling of the parent block.
+command! RubyBlockPrevious :call RubyBlockPrevious()
+command! -range VRubyBlockPrevious :call RubyBlockPrevious(visualmode())
 
 ""
 " This will go to the beginning of the line of the immediate block surrounding
@@ -63,11 +60,14 @@ command! RubyBlockSpecParentContext :call RubyBlockSpecParentContext()
 command! -range VRubyBlockSpecParentContext :call RubyBlockSpecParentContext(visualmode())
 
 ""
-" This will go to the beginning of the line of the previous block at the
-" sibling level. If run on the first block inside another block, it will go to
-" the first previous sibling of the parent block.
-command! RubyBlockPrevious :call RubyBlockPrevious()
-command! -range VRubyBlockPrevious :call RubyBlockPrevious(visualmode())
+" This will go to the start of the current block.
+command! RubyBlockStart :call RubyBlockStart()
+command! -range VRubyBlockStart :call RubyBlockStart(visualmode())
+
+""
+" This will go to the end of the current block.
+command! RubyBlockEnd :call RubyBlockEnd()
+command! -range VRubyBlockEnd :call RubyBlockEnd(visualmode())
 
 ""
 " This will print the hierarchy of surrounding blocks of the current line.
@@ -96,10 +96,10 @@ command! -range RubyBlockSpecEnv :call Output(function("BuildEnv"))
 " @section Mappings, mappings
 " ]b                Goes to next sibling block, or next sibling of parent block
 " [b        Goes to previous sibling block, or previous sibling of parent block
-" ]e                                               Goes to end of current block
-" ]s                                             Goes to start of current block
 " ]p                            Goes to the beginning of the first parent block
 " ]c     Go to the beginning of the first spec context block (describe/context)
+" ]s                                             Goes to start of current block
+" ]e                                               Goes to end of current block
 " ]h                               Print the block hierachy to the current line
 " ]v                  Prints the various 'lets', 'subjects', and '@=' variables
 
@@ -107,36 +107,16 @@ nmap <silent> ]b :RubyBlockNext<CR>
 xmap <silent> ]b :VRubyBlockNext<CR>
 nmap <silent> [b :RubyBlockPrevious<CR>
 xmap <silent> [b :VRubyBlockPrevious<CR>
-nmap <silent> ]e :RubyBlockEnd<CR>
-xmap <silent> ]e :VRubyBlockEnd<CR>
-nmap <silent> ]s :RubyBlockStart<CR>
-xmap <silent> ]s :VRubyBlockStart<CR>
 nmap <silent> ]p :RubyBlockParent<CR>
 xmap <silent> ]p :VRubyBlockParent<CR>
 nmap <silent> ]c :RubyBlockSpecParentContext<CR>
 xmap <silent> ]c :VRubyBlockSpecParentContext<CR>
+nmap <silent> ]s :RubyBlockStart<CR>
+xmap <silent> ]s :VRubyBlockStart<CR>
+nmap <silent> ]e :RubyBlockEnd<CR>
+xmap <silent> ]e :VRubyBlockEnd<CR>
 nmap <silent> ]h :RubyBlockHierarchy<CR>
 nmap <silent> ]v :RubyBlockSpecEnv<CR>
-
-function! RubyBlockEnd(...)
-  norm! m'
-  let visual = CheckVisualMode(a:000)
-  let flags = "W"
-  call GoToMatcher()
-  call searchpair(s:start_pattern,'',s:end_pattern, flags)
-  if visual
-    norm! $
-  endif
-endfunction
-
-function! RubyBlockStart(...)
-  norm! m'
-  call CheckVisualMode(a:000)
-  let flags = "Wb"
-  call GoToMatcher()
-  call searchpair(s:start_pattern,'',s:end_pattern, flags)
-  norm! ^
-endfunction
 
 function! RubyBlockNext(...)
   norm! m'
@@ -188,6 +168,26 @@ function! RubyBlockSpecParentContext(...)
     endwhile
   endif
   norm! ^
+endfunction
+
+function! RubyBlockStart(...)
+  norm! m'
+  call CheckVisualMode(a:000)
+  let flags = "Wb"
+  call GoToMatcher()
+  call searchpair(s:start_pattern,'',s:end_pattern, flags)
+  norm! ^
+endfunction
+
+function! RubyBlockEnd(...)
+  norm! m'
+  let visual = CheckVisualMode(a:000)
+  let flags = "W"
+  call GoToMatcher()
+  call searchpair(s:start_pattern,'',s:end_pattern, flags)
+  if visual
+    norm! $
+  endif
 endfunction
 
 function! Output(Func)
