@@ -9,7 +9,7 @@ let s:start_pattern =
       \ s:beginning_prefix .
       \ '\<\%(module\|class\|if\|for\|while\|until\|case\|unless\|begin' .
       \ '\|\%(public\|protected\|private\)\=\s*def\):\@!\>' .
-      \ '\|\%(^\|[^.:@$]\)\@<=\<do:\@!\>'
+      \ '\|\%(^\|[^.:@$]\)\@<=\<do\>\%($\|\s*$\|\s|.*|$\)'
 
 " From vim-ruby - https://github.com/vim-ruby/vim-ruby/blob/074202ffa39b19baf9d9750d399d53d97f21ee07/indent/ruby.vim#L91
 let s:end_pattern = '\%(^\|[^.:@$]\)\@<=\<end:\@!\>'
@@ -28,9 +28,6 @@ let s:env_pattern =
       \ '\%(\<let[!]\=\>' .
       \ '\|subject\%((:.*)\)\=\%(\s\%({\|do\)\)' .
       \ '\|@[a-zA-Z0-9_]\+\s*=\)'
-
-" TODO
-" handle do in test description
 
 ""
 " This will go to the beginning of the line of the next block at the sibling
