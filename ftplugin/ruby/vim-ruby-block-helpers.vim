@@ -73,7 +73,7 @@ command! -range VRubyBlockEnd :call RubyBlockEnd(visualmode())
 " describe "foo" do
 "   context "bar" do
 "     it "baz" do
-command! -range RubyBlockHierarchy :call Output(function("BuildHierarchy"))
+command! RubyBlockHierarchy :call Output(function("BuildHierarchy"))
 
 ""
 " *EXPERIMENTAL*
@@ -87,7 +87,7 @@ command! -range RubyBlockHierarchy :call Output(function("BuildHierarchy"))
 "   context "bar" do
 "     \@thing2 = Thing2.new
 "     it "baz" do
-command! -range RubyBlockSpecEnv :call Output(function("BuildEnv"))
+command! RubyBlockSpecEnv :call Output(function("BuildEnv"))
 
 ""
 " @section Mappings, mappings
