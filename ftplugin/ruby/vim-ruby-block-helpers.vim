@@ -30,7 +30,6 @@ let s:env_pattern =
       \ '\|@[a-zA-Z0-9_]\+\s*=\)'
 
 " TODO
-" Set marks
 " Return to column/line when appropriate
 " Make visual work
 " handle do in test description
@@ -58,7 +57,7 @@ command! RubyBlockParent :call RubyBlockParent()
 " This will go to the beginning of the line of the immediate rspec block
 " surrounding the block you are currently in. Limited to
 " describe/context/shared_example.
-command! RubyBlockNearestSpecContext :call RubyBlockNearestSpecContext()
+command! RubyBlockSpecParentContext :call RubyBlockSpecParentContext()
 
 ""
 " This will go to the beginning of the line of the previous block at the
@@ -105,28 +104,34 @@ noremap <silent> [b :RubyBlockPrevious<CR>
 noremap <silent> ]e :RubyBlockEnd<CR>
 noremap <silent> ]s :RubyBlockStart<CR>
 noremap <silent> ]p :RubyBlockParent<CR>
-noremap <silent> ]c :RubyBlockNearestSpecContext<CR>
+noremap <silent> ]c :RubyBlockSpecParentContext<CR>
 noremap <silent> ]h :RubyBlockHierarchy<CR>
 noremap <silent> ]v :RubyBlockSpecEnv<CR>
 
 function! RubyBlockEnd()
+  norm! m'
   let flags = "W"
   call GoToMatcher()
   call searchpair(s:start_pattern,'',s:end_pattern, flags)
 endfunction
 
 function! RubyBlockStart()
-  call RubyBlockEnd()
-  normal %
+  norm! m'
+  let flags = "Wb"
+  call GoToMatcher()
+  call searchpair(s:start_pattern,'',s:end_pattern, flags)
+  norm! ^
 endfunction
 
 function! RubyBlockNext()
+  norm! m'
   let flags = "W"
   call RubyBlockEnd()
   call search(s:next_block_pattern, flags)
 endfunction
 
 function! RubyBlockPrevious()
+  norm! m'
   let flags = "Wb"
   call GoToMatcher()
   if match(getline('.'), s:next_block_pattern) == -1
@@ -141,6 +146,7 @@ function! RubyBlockPrevious()
 endfunction
 
 function! RubyBlockParent()
+  norm! m'
   let flags = "Wb"
   if GoToMatcher() < 1
     call searchpair(s:start_pattern,'',s:end_pattern, flags)
@@ -149,7 +155,8 @@ function! RubyBlockParent()
   normal ^
 endfunction
 
-function! RubyBlockNearestSpecContext()
+function! RubyBlockSpecParentContext()
+  norm! m'
   let flags = "Wb"
   if getline('.') !~ s:context_block_pattern
     let prev_line = line('.')
@@ -161,7 +168,7 @@ function! RubyBlockNearestSpecContext()
       let prev_line = line('.')
     endwhile
   endif
-  normal ^
+  norm! ^
 endfunction
 
 function! Output(Func)
