@@ -131,7 +131,9 @@ function! RubyBlockNext(...)
   norm! m'
   call CheckVisualMode(a:000)
   let flags = "W"
-  call RubyBlockEnd()
+  if match(getline('.'), s:end_pattern, flags) == -1
+    call RubyBlockEnd()
+  endif
   call search(s:next_block_pattern, flags)
 endfunction
 
@@ -271,9 +273,6 @@ endfunction
 function! CheckVisualMode(args)
   if len(a:args) > 0
     if a:args[0] == 'v'
-      norm! v
-      return 1
-    elseif a:args[0] == 'V'
       norm! V
       return 1
     endif
