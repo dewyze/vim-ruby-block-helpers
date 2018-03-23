@@ -44,38 +44,38 @@ let s:env_pattern =
 " This will go to the beginning of the line of the next block at the sibling
 " level. If run on the last block inside another block, it will go to the first
 " sibling of the parent block.
-command! RubyBlockNext :call RubyBlockNext()
-command! -range VRubyBlockNext :call RubyBlockNext(visualmode())
+command RubyBlockNext :call s:RubyBlockNext()
+command -range VRubyBlockNext :call s:RubyBlockNext(visualmode())
 
 ""
 " This will go to the beginning of the line of the previous block at the
 " sibling level. If run on the first block inside another block, it will go to
 " the first previous sibling of the parent block.
-command! RubyBlockPrevious :call RubyBlockPrevious()
-command! -range VRubyBlockPrevious :call RubyBlockPrevious(visualmode())
+command RubyBlockPrevious :call s:RubyBlockPrevious()
+command -range VRubyBlockPrevious :call s:RubyBlockPrevious(visualmode())
 
 ""
 " This will go to the beginning of the line of the immediate block surrounding
 " the block you are currently in.
-command! RubyBlockParent :call RubyBlockParent()
-command! -range VRubyBlockParent :call RubyBlockParent(visualmode())
+command RubyBlockParent :call s:RubyBlockParent()
+command -range VRubyBlockParent :call s:RubyBlockParent(visualmode())
 
 ""
 " This will go to the beginning of the line of the immediate rspec block
 " surrounding the block you are currently in. Limited to
 " describe/context/shared_example.
-command! RubyBlockSpecParentContext :call RubyBlockSpecParentContext()
-command! -range VRubyBlockSpecParentContext :call RubyBlockSpecParentContext(visualmode())
+command RubyBlockSpecParentContext :call s:RubyBlockSpecParentContext()
+command -range VRubyBlockSpecParentContext :call s:RubyBlockSpecParentContext(visualmode())
 
 ""
 " This will go to the start of the current block.
-command! RubyBlockStart :call RubyBlockStart()
-command! -range VRubyBlockStart :call RubyBlockStart(visualmode())
+command RubyBlockStart :call s:RubyBlockStart()
+command -range VRubyBlockStart :call s:RubyBlockStart(visualmode())
 
 ""
 " This will go to the end of the current block.
-command! RubyBlockEnd :call RubyBlockEnd()
-command! -range VRubyBlockEnd :call RubyBlockEnd(visualmode())
+command RubyBlockEnd :call s:RubyBlockEnd()
+command -range VRubyBlockEnd :call s:RubyBlockEnd(visualmode())
 
 ""
 " This will print the hierarchy of surrounding parent blocks of the current
@@ -85,7 +85,7 @@ command! -range VRubyBlockEnd :call RubyBlockEnd(visualmode())
 " describe "foo" do
 "   context "bar" do
 "     it "baz" do
-command! RubyBlockHierarchy :call Output(function("BuildHierarchy"))
+command RubyBlockHierarchy :call s:Output(function("BuildHierarchy"))
 
 ""
 " *EXPERIMENTAL*
@@ -99,7 +99,7 @@ command! RubyBlockHierarchy :call Output(function("BuildHierarchy"))
 "   context "bar" do
 "     \@thing2 = Thing2.new
 "     it "baz" do
-command! RubyBlockSpecEnv :call Output(function("BuildEnv"))
+command RubyBlockSpecEnv :call s:Output(function("BuildEnv"))
 
 ""
 " @section Mappings, mappings
@@ -127,21 +127,21 @@ xmap <silent> ]e :VRubyBlockEnd<CR>
 nmap <silent> ]h :RubyBlockHierarchy<CR>
 nmap <silent> ]v :RubyBlockSpecEnv<CR>
 
-function! RubyBlockNext(...)
+function s:RubyBlockNext(...)
   norm! m'
-  call CheckVisualMode(a:000)
+  call s:CheckVisualMode(a:000)
   let flags = "W"
   if match(getline('.'), s:end_pattern, flags) == -1
-    call RubyBlockEnd()
+    call s:RubyBlockEnd()
   endif
   call search(s:next_block_pattern, flags)
 endfunction
 
-function! RubyBlockPrevious(...)
+function s:RubyBlockPrevious(...)
   norm! m'
-  call CheckVisualMode(a:000)
+  call s:CheckVisualMode(a:000)
   let flags = "Wb"
-  call GoToMatcher()
+  call s:GoToMatcher()
   if match(getline('.'), s:next_block_pattern) == -1
     call searchpair(s:start_pattern,'',s:end_pattern, flags)
   end
@@ -153,20 +153,20 @@ function! RubyBlockPrevious(...)
   norm! ^
 endfunction
 
-function! RubyBlockParent(...)
+function s:RubyBlockParent(...)
   norm! m'
-  call CheckVisualMode(a:000)
+  call s:CheckVisualMode(a:000)
   let flags = "Wb"
-  if GoToMatcher() < 1
+  if s:GoToMatcher() < 1
     call searchpair(s:start_pattern,'',s:end_pattern, flags)
   endif
   call searchpair(s:start_pattern,'',s:end_pattern, flags)
   normal ^
 endfunction
 
-function! RubyBlockSpecParentContext(...)
+function s:RubyBlockSpecParentContext(...)
   norm! m'
-  call CheckVisualMode(a:000)
+  call s:CheckVisualMode(a:000)
   let flags = "Wb"
   if getline('.') !~ s:context_block_pattern
     let prev_line = line('.')
@@ -181,65 +181,65 @@ function! RubyBlockSpecParentContext(...)
   norm! ^
 endfunction
 
-function! RubyBlockStart(...)
+function s:RubyBlockStart(...)
   norm! m'
-  call CheckVisualMode(a:000)
+  call s:CheckVisualMode(a:000)
   let flags = "Wb"
-  call GoToMatcher()
+  call s:GoToMatcher()
   call searchpair(s:start_pattern,'',s:end_pattern, flags)
   norm! ^
 endfunction
 
-function! RubyBlockEnd(...)
+function s:RubyBlockEnd(...)
   norm! m'
-  let visual = CheckVisualMode(a:000)
+  let visual = s:CheckVisualMode(a:000)
   let flags = "W"
-  call GoToMatcher()
+  call s:GoToMatcher()
   call searchpair(s:start_pattern,'',s:end_pattern, flags)
   if visual
     norm! $
   endif
 endfunction
 
-function! Output(Func)
+function s:Output(Func)
   let origline = line('.')
   let origcol = col('.')
-  call RubyBlockEnd()
+  call s:RubyBlockEnd()
   normal ^%
   let curline = line('.')
   let l:output = getline('.')
-  call RubyBlockParent()
+  call s:RubyBlockParent()
   let l:output = a:Func(curline, output)
   call cursor(origline, origcol)
   echo l:output
 endfunction
 
-function! BuildHierarchy(curline, output)
+function s:BuildHierarchy(curline, output)
   let l:output = a:output
   let l:curline = a:curline
   while line('.') != l:curline
     let l:output = getline('.') . "\n" . l:output
     let l:curline = line('.')
-    call RubyBlockParent()
+    call s:RubyBlockParent()
   endwhile
 
   return l:output
 endfunction
 
-function! BuildEnv(curline, output)
+function s:BuildEnv(curline, output)
   let l:output = a:output
   let l:curline = a:curline
   while line('.') != l:curline
     let [l:vars, l:curline] = SearchForEnv(l:curline)
     call cursor(l:curline, 1)
     let l:output = getline('.') . "\n" . l:vars . l:output
-    call RubyBlockParent()
+    call s:RubyBlockParent()
   endwhile
 
   return l:output
 endfunction
 
-function! SearchForEnv(stopline)
+function s:SearchForEnv(stopline)
   let curline = line('.')
   let new_stop_line = search(s:test_block_pattern, 'Wn', a:stopline)
   let stopline = 0
@@ -270,16 +270,13 @@ function! SearchForEnv(stopline)
   endif
 endfunction
 
-function! CheckVisualMode(args)
-  if len(a:args) > 0
-    if a:args[0] == 'v'
-      norm! V
-      return 1
-    endif
+function s:CheckVisualMode(args)
+  if len(a:args) > 0 && a:args[0] == 'v'
+    norm! V
   endif
 endfunction
 
-function! GoToMatcher()
+function s:GoToMatcher()
   norm! ^
   return search(s:start_pattern, 'c', line('.'))
 endfunction
