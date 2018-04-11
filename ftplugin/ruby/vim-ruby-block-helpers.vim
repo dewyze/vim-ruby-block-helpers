@@ -85,7 +85,7 @@ command -range VRubyBlockEnd :call s:RubyBlockEnd(visualmode())
 " describe "foo" do
 "   context "bar" do
 "     it "baz" do
-command RubyBlockHierarchy :call s:Output(function("BuildHierarchy"))
+command RubyBlockHierarchy :call s:Output(function("s:BuildHierarchy"))
 
 ""
 " *EXPERIMENTAL*
@@ -99,7 +99,7 @@ command RubyBlockHierarchy :call s:Output(function("BuildHierarchy"))
 "   context "bar" do
 "     \@thing2 = Thing2.new
 "     it "baz" do
-command RubyBlockSpecEnv :call s:Output(function("BuildEnv"))
+command RubyBlockSpecEnv :call s:Output(function("s:BuildEnv"))
 
 ""
 " @section Mappings, mappings
@@ -230,7 +230,7 @@ function s:BuildEnv(curline, output)
   let l:output = a:output
   let l:curline = a:curline
   while line('.') != l:curline
-    let [l:vars, l:curline] = SearchForEnv(l:curline)
+    let [l:vars, l:curline] = s:SearchForEnv(l:curline)
     call cursor(l:curline, 1)
     let l:output = getline('.') . "\n" . l:vars . l:output
     call s:RubyBlockParent()
@@ -251,10 +251,10 @@ function s:SearchForEnv(stopline)
   let l:next_outside_test_block_matcher_line = search(s:non_test_block_pattern, 'Wn', stopline)
 
   if l:next_outside_test_block_matcher_line != 0
-    let [vars_1, _] = SearchForEnv(l:next_outside_test_block_matcher_line - 1)
+    let [vars_1, _] = s:SearchForEnv(l:next_outside_test_block_matcher_line - 1)
     call cursor(l:next_outside_test_block_matcher_line, 1)
     normal ^%j
-    let [vars_2, _] = SearchForEnv(stopline)
+    let [vars_2, _] = s:SearchForEnv(stopline)
     return [vars_1 . vars_2, curline]
   else
     let vars = ''
