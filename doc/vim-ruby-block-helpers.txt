@@ -54,8 +54,8 @@ COMMANDS                                     *vim-ruby-block-helpers-commands*
   describe "foo" do   context "bar" do     it "baz" do
 
 :RubyBlockSpecEnv                                          *:RubyBlockSpecEnv*
-  *EXPERIMENTAL* This should really only be used in RSpec style files, and it
-  is tailored to those. It will print out the first line all `let/subject`
+  *EXPERIMENTAL* This should really only be used in ruby test files, and it is
+  tailored to those. It will print out the first line all `let/subject`
   blocks, as well as anytime an `@=` varable is defined in a setup section for
   a test. For example, it will print:
 

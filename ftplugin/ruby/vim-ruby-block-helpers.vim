@@ -29,7 +29,7 @@ let s:group_prefix = s:beginning_prefix . '\<\%('
 let s:suffix = '\):\@!\>'
 let s:non_test_block_keywords = 'class\|module\|def'
 let s:context_block_keywords = 'describe\|context\|shared_examples\|shared_context'
-let s:test_block_keywords = s:context_block_keywords . '\|it'
+let s:test_block_keywords = s:context_block_keywords . '\|it\|test'
 let s:non_test_block_pattern = s:group_prefix . s:non_test_block_keywords . s:suffix
 let s:test_block_pattern = s:group_prefix . s:test_block_keywords . s:suffix
 let s:context_block_pattern = s:group_prefix . s:context_block_keywords . s:suffix . '\s.*\zs\<do\>'
@@ -79,7 +79,7 @@ command -range VRubyBlockEnd :call s:RubyBlockEnd(visualmode())
 
 ""
 " This will print the hierarchy of surrounding parent blocks of the current
-" line. This can be useful in large spec files to learn where you are. For 
+" line. This can be useful in large spec files to learn where you are. For
 " example, it will print:
 "
 " describe "foo" do
@@ -89,7 +89,7 @@ command RubyBlockHierarchy :call s:Output(function("s:BuildHierarchy"))
 
 ""
 " *EXPERIMENTAL*
-" This should really only be used in RSpec style files, and it is tailored to
+" This should really only be used in ruby test files, and it is tailored to
 " those. It will print out the first line all `let/subject` blocks, as well as
 " anytime an `@=` varable is defined in a setup section for a test.
 " For example, it will print:
