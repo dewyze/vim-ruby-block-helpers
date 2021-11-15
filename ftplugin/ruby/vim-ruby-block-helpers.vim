@@ -31,9 +31,9 @@ let s:non_test_block_keywords = 'class\|module\|def'
 let s:context_block_keywords = 'describe\|context\|shared_examples\|shared_context'
 let s:test_block_keywords = s:context_block_keywords . '\|it\|test'
 let s:non_test_block_pattern = s:group_prefix . s:non_test_block_keywords . s:suffix
-let s:test_block_pattern = s:group_prefix . s:test_block_keywords . s:suffix
+let s:test_block_pattern = s:group_prefix . s:test_block_keywords . s:suffix . '\s.*\zs\<do\>'
 let s:context_block_pattern = s:group_prefix . s:context_block_keywords . s:suffix . '\s.*\zs\<do\>'
-let s:next_block_pattern = s:group_prefix . s:test_block_keywords . '\|' . s:non_test_block_keywords . s:suffix
+let s:next_block_pattern = s:group_prefix . s:test_block_keywords . '\|' . s:non_test_block_keywords . s:suffix . '\s.*\zs\<do\>'
 let s:env_pattern =
       \ '\C^\s*\zs' .
       \ '\%(\<let[!]\=\>' .
