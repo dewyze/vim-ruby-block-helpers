@@ -4,6 +4,8 @@ This adds mappings/keystrokes to vim to allow you to more easily maneuver and
 traverse ruby blocks. Additionally it adds some very helpful features for
 showing context/describe hierarchy in rspec.
 
+Jump to [setup](#setup).
+
 ## Mappings
 
 ```
@@ -77,6 +79,22 @@ describe "foo" do
     @thing2 = Thing2.new
     it "baz" do
 ```
+
+## Setup
+
+With [vim-plug](https://github.com/junegunn/vim-plug)
+
+1. Add an entry to your `.vimrc`:
+
+```
+Plug 'dewyze/vim-ruby-block-helpers'
+```
+
+2. Reload your `.vimrc`
+```
+source %
+```
+3. Run `:PlugInstall`
 
 ## Contributing
 
